@@ -1,7 +1,7 @@
+from __future__ import print_function, division
+
 import socket
 import json
-
-from __future__ import print_function, division
  
 import pygame, os, sys
 from pygame.locals import *
@@ -22,6 +22,7 @@ def initialize_server():
     s.listen(1)
     print("Waiting for a connection...")
     conn, addr = s.accept()
+    conn.setblocking(0)  # Make the socket non-blocking
     print(f"Connected to {addr}")
     return conn
 
@@ -29,8 +30,10 @@ def initialize_server():
 def initialize_client(server_ip):
     port = 12345
     s.connect((server_ip, port))
+    s.setblocking(0)  # Make the socket non-blocking
     print("Connected to the server")
     return s
+
 
 
 class Brick(pygame.sprite.Sprite):
@@ -247,6 +250,11 @@ class Tank(pygame.sprite.Sprite):
                 pygame.sprite.Sprite.kill(Tank.book[1])
             elif self.number == 2:
                 pygame.sprite.Sprite.kill(Tank.book[0])
+    
+        # Send the tank's state to the other player
+        state = {'x': self.x, 'y': self.y, 'angle': self.angle, 'health': self.health}
+        conn.sendall(json.dumps(state).encode())
+
                 
                
 
@@ -308,10 +316,13 @@ def newlevel():
 def main():
     choice = input("Do you want to host the game? (yes/no): ")
     if choice.lower() == 'yes':
-     conn = initialize_server()
+        conn = initialize_server()
+        is_host = True
+
     else:
-     server_ip = input("Enter the server IP: ")
-     conn = initialize_client(server_ip)
+        server_ip = input("Enter the server IP: ")
+        conn = initialize_client(server_ip)
+        is_host = False
 
     pygame.init()
     version = "Tank Wars 2.0"
@@ -332,6 +343,30 @@ def main():
     font5 = pygame.font.SysFont("Courier New", 16, bold=True)
 
     while True:
+        # Receive the other player's state
+        try:
+            received_data = conn.recv(1024)
+            other_player_state = json.loads(received_data.decode())
+        except BlockingIOError:
+            pass  # No data received
+        except json.JSONDecodeError:
+            print("Received malformed JSON data")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
+
+        # Update the other player's state
+        if is_host:
+            player1.x = other_player_state['x']
+            player1.y = other_player_state['y']
+            player1.angle = other_player_state['angle']
+            player1.health = other_player_state['health']
+        else:
+            player2.x = other_player_state['x']
+            player2.y = other_player_state['y']
+            player2.angle = other_player_state['angle']
+            player2.health = other_player_state['health']
+
         screen.fill((0,0,0))
         if player1.alive == False and levelnum == 1:
             notalive = 1
