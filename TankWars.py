@@ -1,3 +1,5 @@
+import socket
+import json
 
 from __future__ import print_function, division
  
@@ -8,6 +10,27 @@ import effects
 from effects import *
 import math
 GRAD = math.pi / 180
+
+# Initialize socket
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Function to act as a server
+def initialize_server():
+    host = '0.0.0.0'
+    port = 12345
+    s.bind((host, port))
+    s.listen(1)
+    print("Waiting for a connection...")
+    conn, addr = s.accept()
+    print(f"Connected to {addr}")
+    return conn
+
+# Function to act as a client
+def initialize_client(server_ip):
+    port = 12345
+    s.connect((server_ip, port))
+    print("Connected to the server")
+    return s
 
 
 class Brick(pygame.sprite.Sprite):
@@ -283,6 +306,13 @@ def newlevel():
     
     
 def main():
+    choice = input("Do you want to host the game? (yes/no): ")
+    if choice.lower() == 'yes':
+     conn = initialize_server()
+    else:
+     server_ip = input("Enter the server IP: ")
+     conn = initialize_client(server_ip)
+
     pygame.init()
     version = "Tank Wars 2.0"
     pygame.display.set_caption("Tank Wars 2.0")
