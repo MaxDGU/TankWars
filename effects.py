@@ -1,8 +1,23 @@
 import pygame
 import math
 import random
+import os
 from pygame.locals import *
 from math import *
+
+# Cache sounds to avoid loading from disk every time
+_sound_cache = {}
+
+def get_sound(filename):
+    """Load sound from cache or disk"""
+    if filename not in _sound_cache:
+        path = os.path.join(os.path.dirname(__file__), filename)
+        if os.path.exists(path):
+            _sound_cache[filename] = pygame.mixer.Sound(path)
+        else:
+            _sound_cache[filename] = None
+    return _sound_cache[filename]
+
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, pos, angle, size, who, tank):
@@ -26,9 +41,8 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.center = self.x, self.y
         self.angle = angle
         self.image = pygame.transform.rotate(self.image, angle)
-        # Load sound with absolute path
-        import os
-        self.hit_s = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), "hit.wav"))
+        # Use cached sound
+        self.hit_s = get_sound("hit.wav")
         self.who = who
     def get_size(self):
         return self._size
@@ -45,21 +59,26 @@ class Bullet(pygame.sprite.Sprite):
 class Boom(pygame.sprite.Sprite):
     def __init__(self, pos, size):
         pygame.sprite.Sprite.__init__(self)
+        # Reduced particle counts for better performance
         if size == "huge":
-            self.life = 70
-        if size == "large":
-            self.life = 20
-        if size == "big":
-            self.life = 15
-        if size == "small":
+            self.life = 40  # Reduced from 70
+            particle_count = 20  # Was 140
+        elif size == "large":
+            self.life = 15  # Reduced from 20
+            particle_count = 10  # Was 40
+        elif size == "big":
+            self.life = 12
+            particle_count = 0  # Uses Blast instead
+        else:  # small
             self.life = 7
-        
+            particle_count = 8  # Was 14
+
         self.blasts = []
-        
+
         if size == "big":
             self.blasts.append(Blast(pos, self.life))
         else:
-            for x in range(self.life*2):
+            for _ in range(particle_count):
                 self.blasts.append(Fireball(pos, self.life))
 
     def update(self, background):

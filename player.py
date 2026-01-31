@@ -55,9 +55,11 @@ class PlayerTank(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
-        # Sound
-        self.bullet_sound = pygame.mixer.Sound(os.path.join(base_path, "bullet.wav"))
-        self.bullet_sound.set_volume(0.25)
+        # Sound (cached)
+        from effects import get_sound
+        self.bullet_sound = get_sound("bullet.wav")
+        if self.bullet_sound:
+            self.bullet_sound.set_volume(0.25)
 
         # References
         self.bullets_group = bullets_group
@@ -177,7 +179,8 @@ class PlayerTank(pygame.sprite.Sprite):
         )
         self.bullets_group.add(bullet)
         self.ammo -= 1
-        self.bullet_sound.play()
+        if self.bullet_sound:
+            self.bullet_sound.play()
 
     def _handle_brick_collision(self, bricks, prev_rect):
         """Handle collision with bricks"""
