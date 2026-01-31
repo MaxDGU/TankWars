@@ -206,7 +206,7 @@ class PlayerTank(pygame.sprite.Sprite):
 
     def _handle_bullet_collision(self, enemy_bullets, booms):
         """Handle collision with enemy bullets"""
-        for bullet in enemy_bullets:
+        for bullet in list(enemy_bullets):  # Iterate over copy
             if self.rect.colliderect(bullet.rect):
                 bullet_size = bullet.get_size()
                 pygame.sprite.Sprite.kill(bullet)

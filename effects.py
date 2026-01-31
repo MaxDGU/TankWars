@@ -26,7 +26,9 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.center = self.x, self.y
         self.angle = angle
         self.image = pygame.transform.rotate(self.image, angle)
-        self.hit_s = pygame.mixer.Sound("hit.wav")
+        # Load sound with absolute path
+        import os
+        self.hit_s = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), "hit.wav"))
         self.who = who
     def get_size(self):
         return self._size
@@ -81,7 +83,7 @@ class Fireball(pygame.sprite.Sprite):
 
         self.vec_pos = [float(self.rect.center[0]), float(self.rect.center[1])]
 
-        self.direc = [random.randint(1.0, 50.0)*(random.randint(0, 1)*2-1),random.randint(1.0,50.0)*(random.randint(0,1)*2-1)]
+        self.direc = [random.randint(1, 50)*(random.randint(0, 1)*2-1),random.randint(1,50)*(random.randint(0,1)*2-1)]
         self.mag = math.sqrt(self.direc[0]**2+self.direc[1]**2)
         self.speed = random.randint(1,100)/33.333
 

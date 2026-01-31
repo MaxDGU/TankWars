@@ -290,8 +290,8 @@ class Game:
                     self.player = PlayerTank(start_pos, 90, PLAYER_START_HEALTH,
                                             PLAYER_START_AMMO, self.bullets, self.allgroup)
 
-        # Update enemies
-        for enemy in self.enemies:
+        # Update enemies (iterate over copy to allow removal)
+        for enemy in list(self.enemies):
             enemy.update(self.player, self.bricks, self.bullets, self.booms)
 
             # Check if enemy destroyed
@@ -308,11 +308,11 @@ class Game:
         self.bullets.update(self.bricks, self.booms)
         self.enemy_bullets.update(self.bricks, self.booms)
 
-        # Check bullet-enemy collisions
-        for bullet in self.bullets:
-            for enemy in self.enemies:
+        # Check bullet-enemy collisions (iterate over copies)
+        for bullet in list(self.bullets):
+            for enemy in list(self.enemies):
                 if bullet.rect.colliderect(enemy.rect):
-                    damage = 2 if self.player.double_damage_active else 1
+                    damage = 2 if self.player and self.player.double_damage_active else 1
                     enemy.take_damage(damage)
                     bullet.kill()
                     self.booms.add(Boom(bullet.rect.center, "small"))
@@ -321,9 +321,9 @@ class Game:
         # Update power-ups
         self.powerups.update()
 
-        # Check power-up collisions with player
+        # Check power-up collisions with player (iterate over copy)
         if self.player and self.player.alive:
-            for powerup in self.powerups:
+            for powerup in list(self.powerups):
                 if self.player.rect.colliderect(powerup.rect):
                     powerup.apply(self.player)
                     powerup.kill()
